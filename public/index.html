@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leerreis Trigion Startup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1a1a; --ink-2: #444; --ink-3: #888;
+    --line: #e4e4e4; --bg: #fafaf8; --white: #fff;
+    --m-bg:#eeedfe; --m-ink:#3c3489; --m-border:#c4c0f0;
+    --i-bg:#faeeda; --i-ink:#633806; --i-border:#f0c97a;
+    --r-bg:#eaf3de; --r-ink:#27500a; --r-border:#a8d87a;
+    --t-bg:#faece7; --t-ink:#712b13; --t-border:#f0a080;
+    --o-bg:#edf5ff; --o-ink:#0a3d7a; --o-border:#90c4f5;
+    --p-bg:#fce4f3; --p-ink:#8b1a6b; --p-border:#e89dd6;
+    --font-display:'DM Serif Display',Georgia,serif;
+    --font-body:'DM Sans',-apple-system,sans-serif;
+  }
+
+  body { font-family:var(--font-body); background:var(--bg); color:var(--ink); line-height:1.6; -webkit-font-smoothing:antialiased; }
+
+  /* HEADER */
+  .page-header { background:var(--white); border-bottom:1px solid var(--line); padding:2.5rem 3rem 2rem; display:flex; align-items:flex-end; justify-content:space-between; gap:2rem; flex-wrap:wrap; }
+  .page-header h1 { font-family:var(--font-display); font-size:clamp(1.8rem,4vw,2.8rem); font-weight:400; line-height:1.1; letter-spacing:-.02em; }
+  .page-header h1 em { font-style:italic; color:var(--m-ink); }
+  .page-header .sub { font-size:.85rem; color:var(--ink-3); margin-top:.35rem; font-weight:300; }
+  .header-actions { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+
+  /* TOOLBAR */
+  .toolbar { background:var(--white); border-bottom:1px solid var(--line); padding:.65rem 3rem; display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; position:sticky; top:0; z-index:100; }
+  .toolbar-sep { width:1px; height:18px; background:var(--line); margin:0 .25rem; }
+  .toolbar-label { font-size:.68rem; font-weight:600; color:var(--ink-3); text-transform:uppercase; letter-spacing:.06em; margin-right:.15rem; }
+
+  /* BUTTONS */
+  .btn {
+    font-family:var(--font-body); font-size:.73rem; padding:4px 11px;
+    border-radius:20px; border:1px solid var(--line); background:transparent;
+    cursor:pointer; color:var(--ink-3); transition:all .15s; font-weight:400;
+    display:inline-flex; align-items:center; gap:5px; white-space:nowrap;
+  }
+  .btn:hover { border-color:var(--ink-3); color:var(--ink-2); }
+  .btn.on[data-c="all"] { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .btn.on[data-c="m"]   { background:var(--m-bg); color:var(--m-ink); border-color:var(--m-border); }
+  .btn.on[data-c="i"]   { background:var(--i-bg); color:var(--i-ink); border-color:var(--i-border); }
+  .btn.on[data-c="r"]   { background:var(--r-bg); color:var(--r-ink); border-color:var(--r-border); }
+  .btn.on[data-c="t"]   { background:var(--t-bg); color:var(--t-ink); border-color:var(--t-border); }
+  .btn.on[data-c="o"]   { background:var(--o-bg); color:var(--o-ink); border-color:var(--o-border); }
+  .btn.on[data-c="p"]   { background:var(--p-bg); color:var(--p-ink); border-color:var(--p-border); }
+  .btn-add { background:var(--m-bg); color:var(--m-ink); border-color:var(--m-border); font-weight:500; }
+  .btn-add:hover { background:var(--m-ink); color:#fff; border-color:var(--m-ink); }
+  .btn-edit { background:var(--white); }
+  .btn-edit.active { background:var(--i-bg); color:var(--i-ink); border-color:var(--i-border); }
+
+  /* MAIN */
+  .main { max-width:820px; margin:0 auto; padding:3rem 2rem 6rem; }
+
+  /* YEAR DIVIDER — auto gegenereerd */
+  .year-divider {
+    display:flex; align-items:center; gap:1rem;
+    margin: 2.5rem 0 1.5rem;
+    padding-left: 2.25rem;
+  }
+  .year-divider:first-child { margin-top: 0; }
+  .year-label {
+    font-family:var(--font-display); font-size:1.4rem; font-weight:400;
+    color:var(--ink); letter-spacing:-.02em; white-space:nowrap;
+  }
+  .year-line { flex:1; height:1px; background:var(--line); }
+
+  /* TIMELINE */
+  .tl-line { position:relative; padding-left:2.25rem; }
+  .tl-line::before { content:''; position:absolute; left:.45rem; top:0; bottom:0; width:1px; background:linear-gradient(to bottom,transparent,var(--line) 5%,var(--line) 95%,transparent); }
+
+  /* ROW */
+  .tl-row { position:relative; margin-bottom:1rem; display:flex; gap:1rem; align-items:flex-start; animation:fadeIn .25s ease; }
+  .tl-row.hidden { display:none; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+
+  .dot-wrap { position:absolute; left:-2.25rem; top:.85rem; width:1rem; height:1rem; display:flex; align-items:center; justify-content:center; background:var(--bg); flex-shrink:0; }
+  .dot { width:9px; height:9px; border-radius:50%; border:1.5px solid; flex-shrink:0; }
+  .dot.m{background:var(--m-bg);border-color:var(--m-ink);}
+  .dot.i{background:var(--i-bg);border-color:var(--i-ink);}
+  .dot.r{background:var(--r-bg);border-color:var(--r-ink);}
+  .dot.t{background:var(--t-bg);border-color:var(--t-ink);}
+  .dot.o{background:var(--o-bg);border-color:var(--o-ink);}
+  .dot.p{background:var(--p-bg);border-color:var(--p-ink);}
+
+  /* CARD */
+  .card { flex:1; background:var(--white); border:1px solid var(--line); border-radius:10px; padding:1rem 1.1rem; transition:border-color .15s,box-shadow .15s; position:relative; }
+  .card:hover { border-color:#ccc; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+  .card-top { display:flex; align-items:center; gap:.5rem; margin-bottom:.4rem; flex-wrap:wrap; }
+  .badge { font-size:.68rem; font-weight:500; padding:2px 8px; border-radius:20px; white-space:nowrap; }
+  .badge.m{background:var(--m-bg);color:var(--m-ink);}
+  .badge.i{background:var(--i-bg);color:var(--i-ink);}
+  .badge.r{background:var(--r-bg);color:var(--r-ink);}
+  .badge.t{background:var(--t-bg);color:var(--t-ink);}
+  .badge.o{background:var(--o-bg);color:var(--o-ink);}
+  .badge.p{background:var(--p-bg);color:var(--p-ink);}
+  .card-date { font-size:.72rem; color:var(--ink-3); margin-left:auto; font-weight:300; }
+
+  /* Datum-edit veld (edit mode) */
+  .date-edit-wrap { margin-left:auto; display:flex; align-items:center; gap:.3rem; }
+  .date-input {
+    font-family:var(--font-body); font-size:.72rem; color:var(--ink-3);
+    border:none; background:transparent; padding:0; cursor:default;
+    width: auto;
+  }
+  .edit-mode-on .date-input {
+    border-bottom:1px dashed var(--i-border); cursor:text;
+    background:rgba(255,240,180,.2); padding:1px 4px; border-radius:3px;
+  }
+  .date-input:focus { outline:none; background:rgba(255,240,180,.4); }
+
+  .card-title { font-size:.92rem; font-weight:500; color:var(--ink); margin-bottom:.3rem; line-height:1.3; }
+  .card-body { font-size:.83rem; color:var(--ink-2); line-height:1.6; font-weight:300; }
+  .card-body ul { padding-left:1.1rem; margin-top:.35rem; }
+  .card-body li { margin-bottom:.2rem; }
+  .card-body strong { font-weight:500; color:var(--ink); }
+  .quote { font-style:italic; border-left:2px solid var(--t-border); padding-left:.75rem; margin-top:.5rem; color:var(--ink-2); font-size:.85rem; line-height:1.55; font-family:var(--font-display); }
+  .quote-src { font-size:.72rem; color:var(--ink-3); margin-top:.3rem; font-family:var(--font-body); }
+  .chip { display:inline-block; font-size:.68rem; background:#f3f3ef; border:1px solid var(--line); border-radius:4px; padding:1px 6px; margin:4px 3px 0 0; color:var(--ink-3); }
+
+  /* DELETE BUTTON */
+  .delete-btn {
+    display:none; position:absolute; top:.6rem; right:.6rem;
+    width:22px; height:22px; border-radius:50%; border:1px solid #f0c0b0;
+    background:#fff5f2; color:#c0392b; cursor:pointer; font-size:13px;
+    align-items:center; justify-content:center; line-height:1;
+    transition:all .15s; z-index:10;
+  }
+  .delete-btn:hover { background:#c0392b; color:#fff; border-color:#c0392b; }
+  .edit-mode-on .delete-btn { display:flex; }
+
+  /* EDIT MODE */
+  [contenteditable="true"] { outline:none; border-radius:3px; transition:background .15s; cursor:text; }
+  [contenteditable="true"]:focus { background:rgba(255,240,180,.35); outline:1.5px dashed #e8c840; outline-offset:1px; }
+  .edit-mode-on .card { border-color:#e0dff8; }
+
+  /* ADD PANEL */
+  .add-panel {
+    display:none; position:fixed; bottom:2rem; right:2rem;
+    background:var(--white); border:1px solid var(--line);
+    border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,.12);
+    padding:1.5rem; width:380px; z-index:200;
+    animation:slideUp .2s ease;
+  }
+  .add-panel.visible { display:block; }
+  @keyframes slideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+  .add-panel h3 { font-family:var(--font-display); font-weight:400; font-size:1.1rem; margin-bottom:1rem; color:var(--ink); }
+  .form-row { margin-bottom:.75rem; }
+  .form-row label { display:block; font-size:.72rem; font-weight:500; color:var(--ink-3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:.3rem; }
+  .form-row input, .form-row textarea, .form-row select {
+    width:100%; font-family:var(--font-body); font-size:.83rem;
+    padding:.5rem .7rem; border:1px solid var(--line); border-radius:7px;
+    background:var(--bg); color:var(--ink); transition:border-color .15s;
+    resize:vertical;
+  }
+  .form-row input:focus, .form-row textarea:focus, .form-row select:focus {
+    outline:none; border-color:var(--m-border); background:var(--white);
+  }
+  .form-row textarea { min-height:70px; }
+  .date-row { display:flex; gap:.5rem; }
+  .date-row input[type="date"] { flex:1; }
+  .date-row input[type="time"] { width:110px; flex-shrink:0; }
+  .type-pills { display:flex; gap:.4rem; flex-wrap:wrap; }
+  .type-pill {
+    font-size:.72rem; padding:4px 10px; border-radius:20px;
+    border:1px solid var(--line); cursor:pointer; transition:all .15s; font-family:var(--font-body);
+  }
+  .type-pill[data-v="m"].sel{background:var(--m-bg);color:var(--m-ink);border-color:var(--m-border);}
+  .type-pill[data-v="i"].sel{background:var(--i-bg);color:var(--i-ink);border-color:var(--i-border);}
+  .type-pill[data-v="r"].sel{background:var(--r-bg);color:var(--r-ink);border-color:var(--r-border);}
+  .type-pill[data-v="t"].sel{background:var(--t-bg);color:var(--t-ink);border-color:var(--t-border);}
+  .type-pill[data-v="o"].sel{background:var(--o-bg);color:var(--o-ink);border-color:var(--o-border);}
+  .type-pill[data-v="p"].sel{background:var(--p-bg);color:var(--p-ink);border-color:var(--p-border);}
+  .panel-actions { display:flex; gap:.5rem; margin-top:1rem; }
+  .btn-primary { font-family:var(--font-body); font-size:.8rem; font-weight:500; padding:7px 16px; border-radius:8px; border:none; background:var(--m-ink); color:#fff; cursor:pointer; transition:opacity .15s; }
+  .btn-primary:hover { opacity:.85; }
+  .btn-cancel { font-family:var(--font-body); font-size:.8rem; padding:7px 14px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--ink-3); cursor:pointer; }
+  .btn-cancel:hover { background:var(--bg); }
+  .panel-close { position:absolute; top:.75rem; right:.75rem; background:none; border:none; color:var(--ink-3); cursor:pointer; font-size:18px; line-height:1; padding:2px; }
+  .panel-close:hover { color:var(--ink); }
+  .quote-extra { display:none; }
+  .quote-extra.visible { display:block; }
+
+  /* SAVE BUTTON */
+  .btn-save { background:var(--r-bg); color:var(--r-ink); border-color:var(--r-border); font-weight:500; }
+  .btn-save:hover { background:var(--r-ink); color:#fff; border-color:var(--r-ink); }
+  .btn-save.saving { opacity:.6; pointer-events:none; }
+  .btn-save.saved { background:#d4edda; color:#155724; border-color:#c3e6cb; }
+  .btn-save.error { background:#f8d7da; color:#721c24; border-color:#f5c6cb; }
+  .btn-token { padding:4px 8px; }
+
+  /* PASSWORD MODAL */
+  .pw-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:300; align-items:center; justify-content:center; }
+  .pw-modal-overlay.visible { display:flex; }
+  .pw-modal { background:var(--white); border-radius:14px; padding:1.75rem; width:360px; max-width:90vw; box-shadow:0 12px 40px rgba(0,0,0,.18); }
+  .pw-modal h3 { font-family:var(--font-display); font-weight:400; font-size:1.1rem; margin-bottom:.5rem; }
+  .pw-modal p { font-size:.83rem; color:var(--ink-2); margin-bottom:1rem; }
+  .pw-error { font-size:.78rem; color:#c0392b; margin-top:.4rem; display:none; }
+  .pw-error.visible { display:block; }
+
+  /* TOKEN MODAL */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:300; align-items:center; justify-content:center; }
+  .modal-overlay.visible { display:flex; }
+  .modal { background:var(--white); border-radius:14px; padding:1.75rem; width:420px; max-width:90vw; box-shadow:0 12px 40px rgba(0,0,0,.18); }
+  .modal h3 { font-family:var(--font-display); font-weight:400; font-size:1.1rem; margin-bottom:.5rem; }
+  .modal p { font-size:.83rem; color:var(--ink-2); line-height:1.5; }
+
+  /* FOOTER */
+  .page-footer { text-align:center; padding:2rem; font-size:.72rem; color:var(--ink-3); border-top:1px solid var(--line); font-weight:300; }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div>
+    <h1>Leerreis <em>Trigion Startup</em></h1>
+    <p class="sub">Van opstart 2023 tot nu · gebaseerd op officiële pilotdocumenten &amp; OKR-planning</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-edit" id="editToggle" onclick="toggleEdit()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Bewerken
+    </button>
+    <button class="btn btn-save" id="saveBtn" onclick="saveToServer()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      <span id="saveBtnLabel">Opslaan</span>
+    </button>
+  </div>
+</header>
+
+<!-- WACHTWOORD MODAL -->
+<div class="pw-modal-overlay" id="pwModal">
+  <div class="pw-modal">
+    <h3>Bewerkingsmodus</h3>
+    <p>Voer het wachtwoord in om wijzigingen te maken.</p>
+    <div class="form-row">
+      <input type="password" id="pwInput" placeholder="Wachtwoord" onkeydown="if(event.key==='Enter')checkPassword()">
+    </div>
+    <p class="pw-error" id="pwError">Onjuist wachtwoord.</p>
+    <div class="panel-actions" style="margin-top:1rem">
+      <button class="btn-primary" onclick="checkPassword()">Bevestigen</button>
+      <button class="btn-cancel" onclick="closePwModal()">Annuleren</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOKEN MODAL -->
+
+<nav class="toolbar">
+  <span class="toolbar-label">Filter:</span>
+  <button class="btn on" data-c="all" onclick="filter('all')">Alles</button>
+  <button class="btn on" data-c="m"   onclick="filter('m')">Mijlpaal</button>
+  <button class="btn on" data-c="i"   onclick="filter('i')">Inzicht</button>
+  <button class="btn on" data-c="r"   onclick="filter('r')">Resultaat</button>
+  <button class="btn on" data-c="t"   onclick="filter('t')">Testimonial</button>
+  <button class="btn on" data-c="o"   onclick="filter('o')">Doelstelling</button>
+  <button class="btn on" data-c="p"   onclick="filter('p')">Productvisie</button>
+  <div class="toolbar-sep"></div>
+  <button class="btn" id="sortToggle" onclick="toggleSort()" title="Volgorde omdraaien">
+    <svg id="sortIcon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="5 12 19 12 12 5"/></svg>
+    Nieuwste eerst
+  </button>
+  <div class="toolbar-sep"></div>
+  <button class="btn btn-add" onclick="openPanel()">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Nieuw blokje toevoegen
+  </button>
+</nav>
+
+<main class="main" id="mainContent">
+  <!-- Tijdlijn wordt hier door JS opgebouwd -->
+</main>
+
+<!-- ADD PANEL -->
+<div class="add-panel" id="addPanel">
+  <button class="panel-close" onclick="closePanel()">×</button>
+  <h3>Nieuw blokje toevoegen</h3>
+
+  <div class="form-row">
+    <label>Type</label>
+    <div class="type-pills">
+      <button class="type-pill sel" data-v="m" onclick="selectType(this)">Mijlpaal</button>
+      <button class="type-pill" data-v="i" onclick="selectType(this)">Inzicht</button>
+      <button class="type-pill" data-v="r" onclick="selectType(this)">Resultaat</button>
+      <button class="type-pill" data-v="t" onclick="selectType(this)">Testimonial</button>
+      <button class="type-pill" data-v="o" onclick="selectType(this)">Doelstelling</button>
+      <button class="type-pill" data-v="p" onclick="selectType(this)">Productvisie</button>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <label>Datum &amp; tijd</label>
+    <div class="date-row">
+      <input type="date" id="inputDate">
+      <input type="time" id="inputTime" placeholder="optioneel">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <label>Titel</label>
+    <input type="text" id="inputTitle" placeholder="Korte, krachtige omschrijving">
+  </div>
+
+  <div class="form-row">
+    <label>Beschrijving</label>
+    <textarea id="inputBody" placeholder="Toelichting, context of bevindingen..."></textarea>
+  </div>
+
+  <div class="form-row quote-extra" id="quoteExtra">
+    <label>Quote (voor testimonial)</label>
+    <input type="text" id="inputQuote" placeholder='"Citaat van de persoon."'>
+    <br><br>
+    <label>Bron</label>
+    <input type="text" id="inputSrc" placeholder="— Naam, Organisatie">
+  </div>
+
+  <div class="panel-actions">
+    <button class="btn-primary" onclick="addCard()">Toevoegen</button>
+    <button class="btn-cancel" onclick="closePanel()">Annuleren</button>
+  </div>
+</div>
+
+<footer class="page-footer">
+  Trigion Startup · Leerreis 2023–2026 · Intern document
+</footer>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+// Elke entry heeft: id, type (m/i/r/t/o), date (YYYY-MM-DD), time (HH:MM, optioneel),
+// title, body (HTML toegestaan), quote, quoteSrc, chips (array)
+
+let entries = [
+  {
+    "id": 1,
+    "type": "m",
+    "date": "2023-06-01",
+    "time": "",
+    "title": "Opstart Trigion Startup — bewust los van de moederorganisatie",
+    "body": "Een klein team begint buiten de Trigion-lijn om snel te kunnen bewegen en te experimenteren met digitale innovatie in de beveiligingssector.",
+    "chips": []
+  },
+  {
+    "id": 2,
+    "type": "i",
+    "date": "2023-09-01",
+    "time": "",
+    "title": "De markt is versnipperd — en mensen zijn het zat",
+    "body": "Eerste gesprekken bevestigen: systemen praten niet met elkaar, rapportages kosten onnodig tijd, frustratie is groot. Dit wordt de kern van de propositie.",
+    "chips": []
+  },
+  {
+    "id": 3,
+    "type": "m",
+    "date": "2024-06-01",
+    "time": "",
+    "title": "MVP's gebouwd: OnePersonal (app) &amp; OneFacility (dashboard)",
+    "body": "Twee productlijnen worden concreet. Eerste proof-of-concepts gebouwd en intern getest.",
+    "chips": []
+  },
+  {
+    "id": 4,
+    "type": "o",
+    "date": "2024-09-01",
+    "time": "",
+    "title": "Eerste doelcyclus: stabiele app, klaar voor pilotgebruikers",
+    "body": "App op fysieke telefoon, beveiligers kunnen zelfstandig starten, feedback ophalen. Log aggregatie en analytics tooling geïmplementeerd.",
+    "chips": []
+  },
+  {
+    "id": 5,
+    "type": "m",
+    "date": "2025-12-15",
+    "time": "",
+    "title": "Eerste echte klantpilot — H'ART Museum",
+    "body": "6 beveiligers werken een week lang met de app voor taken, meldingen en rondes.",
+    "chips": [
+      "6 beveiligers",
+      "1 locatie"
+    ]
+  },
+  {
+    "id": 6,
+    "type": "r",
+    "date": "2025-12-21",
+    "time": "",
+    "title": "Tijdens rondes: duidelijke meerwaarde. Op zaal: portofoon wint nog",
+    "body": "Redelijk stabiel na dag 1. Wifi-afhankelijkheid bleek groot obstakel. Tijden aanpassen niet mogelijk → onjuiste rapportages. Desktop-variant ontbrak voor receptietaken.",
+    "chips": []
+  },
+  {
+    "id": 7,
+    "type": "i",
+    "date": "2025-12-21",
+    "time": "",
+    "title": "Protocollen zijn het échte knelpunt",
+    "body": "Subtaken sloten niet aan op de praktijk, volgorde klopte niet, content niet actueel. Digitalisering legt bloot wat al schuurt.",
+    "chips": []
+  },
+  {
+    "id": 8,
+    "type": "i",
+    "date": "2025-12-21",
+    "time": "",
+    "title": "Gedragsverandering botst met beroepsidentiteit",
+    "body": "Een beveiliger hoort zichtbaar alert te zijn, met portofoon. Werken op een telefoon voelt onprofessioneel. Weerstand is identity-gedreven — diep verankerd in opleiding en cultuur.",
+    "chips": []
+  },
+  {
+    "id": 9,
+    "type": "i",
+    "date": "2025-12-21",
+    "time": "",
+    "title": "Adoptie is een organisatievraagstuk, geen IT-vraagstuk",
+    "body": "Functionerende technologie leidt niet automatisch tot gebruik. Duurzame adoptie vraagt technologie + organisatie + leiderschap die elkaar versterken.",
+    "chips": []
+  },
+  {
+    "id": 10,
+    "type": "t",
+    "date": "2025-12-21",
+    "time": "",
+    "title": "Stem uit het veld — H'ART Museum",
+    "quote": "\"Takenlijst voegt vooral waarde toe voor nieuwe beveiligers.\"",
+    "quoteSrc": "— Beveiliger, H'ART Museum",
+    "chips": []
+  },
+  {
+    "id": 11,
+    "type": "m",
+    "date": "2026-02-02",
+    "time": "",
+    "title": "Pilot 2 — Gemeente Zaanstad: grotere pilot vervangt Word, PDF en mail",
+    "body": "11 beveiligers + 6 stakeholders. Zaanstad gebruikt geen Sequrix.",
+    "chips": [
+      "11 beveiligers",
+      "6 stakeholders"
+    ]
+  },
+  {
+    "id": 12,
+    "type": "r",
+    "date": "2026-02-13",
+    "time": "",
+    "title": "Technisch werkbaar · adoptie gemengd · inzicht onvoldoende",
+    "body": "Meldingen maken werkt. Basis stabiel. Maar: app voelt als extra systeem, dubbele registratie blijft, procesondersteuning ontbreekt nog.",
+    "chips": []
+  },
+  {
+    "id": 13,
+    "type": "r",
+    "date": "2026-02-13",
+    "time": "",
+    "title": "Klanten willen al overstappen — de basis is er",
+    "body": "Zowel beveiligers als stakeholders geven aan nu al te willen overstappen. Nog nodig: zoekfunctie/passenmodule, terugblik op rapportages, multi-user portal.",
+    "chips": []
+  },
+  {
+    "id": 14,
+    "type": "t",
+    "date": "2026-02-13",
+    "time": "",
+    "title": "Stem van een beveiliger — Gemeente Zaanstad",
+    "quote": "\"Ik moet er nu in werken, maar ik werk er nog niet mee.\"",
+    "quoteSrc": "— Beveiliger, Gemeente Zaanstad",
+    "chips": []
+  },
+  {
+    "id": 15,
+    "type": "t",
+    "date": "2026-02-13",
+    "time": "",
+    "title": "Stem van een stakeholder — Gemeente Zaanstad",
+    "quote": "\"Ik moet scrollen om te zien welke pas het was.\"",
+    "quoteSrc": "— Stakeholder, Gemeente Zaanstad",
+    "chips": []
+  },
+  {
+    "id": 16,
+    "type": "m",
+    "date": "2026-03-04",
+    "time": "",
+    "title": "Pilot 3 — Gemeente Arnhem: langste pilot tot nu toe (3 weken)",
+    "body": "12 beveiligers + 6 stakeholders. Totaal over alle pilots: <strong>35 beveiligers &amp; 12 stakeholders</strong>.",
+    "chips": [
+      "12 beveiligers",
+      "6 stakeholders",
+      "Totaal: 35 + 12"
+    ]
+  },
+  {
+    "id": 17,
+    "type": "r",
+    "date": "2026-03-25",
+    "time": "",
+    "title": "Technische instabiliteit remt adoptie",
+    "body": "Uitloggen, dataverlies, hoge batterijconsumptie, wifi-afhankelijkheid. Gebruikers vielen terug op Sequrix. Werk kostte meer tijd in plaats van minder.",
+    "chips": []
+  },
+  {
+    "id": 18,
+    "type": "i",
+    "date": "2026-03-25",
+    "time": "",
+    "title": "Stakeholders hebben fundamenteel verschillende informatiebehoefte",
+    "body": "Contractmanager zoekt overzicht &amp; controle. Veiligheidscoördinator zoekt detail &amp; context. Eén rapportage werkt niet voor iedereen.",
+    "chips": []
+  },
+  {
+    "id": 19,
+    "type": "t",
+    "date": "2026-03-25",
+    "time": "",
+    "title": "Stem van een veiligheidscoördinator — Gemeente Arnhem",
+    "quote": "\"Signalen en situaties — zoals overlast, specifieke personen — zie ik nu niet terug.\"",
+    "quoteSrc": "— Veiligheidscoördinator, Gemeente Arnhem",
+    "chips": []
+  },
+  {
+    "id": 20,
+    "type": "i",
+    "date": "2026-03-26",
+    "time": "",
+    "title": "4 structurele lessen uit alle pilots",
+    "body": "<ul><li>Gebrek aan standaardisatie in content, protocollen en werkwijzen</li><li>Fragmentatie van tooling versterkt scepsis en wantrouwen</li><li>Gedragsverandering botst met beroepsidentiteit van beveiligers</li><li>Adoptie is een organisatievraagstuk, niet alleen een IT-vraagstuk</li></ul>",
+    "chips": []
+  },
+  {
+    "id": 21,
+    "type": "o",
+    "date": "2026-03-31",
+    "time": "",
+    "title": "Afgerond in Q1: plattegronden, log aggregatie, analytics, specifieke rapportage",
+    "body": "SVG plattegronden + ruimte polygonen in portal. Log aggregatie en analytics geïmplementeerd in app en portal. Specifieke rapportage downloadbaar in portal.",
+    "chips": []
+  },
+  {
+    "id": 22,
+    "type": "o",
+    "date": "2026-06-01",
+    "time": "",
+    "title": "Nu: commerciële propositie, stabiliteit, portal-flows, juridisch",
+    "body": "Inzichten ophalen bij 10–15 klanten voor waardevalidatie. Prijsstrategie in ontwikkeling. Juridische acties kortetermijn at risk.",
+    "chips": []
+  },
+  {
+    "id": 24,
+    "type": "p",
+    "date": "2026-01-01",
+    "time": "",
+    "title": "Productvisie",
+    "body": "Vul hier de productvisie in.",
+    "chips": []
+  },
+  {
+    "id": 23,
+    "type": "m",
+    "date": "2026-07-01",
+    "time": "",
+    "title": "Richting: stabiele release, passenmodule, notificaties, AI chat fundament",
+    "body": "Passenmodule MVP, perioderapport, proactieve notificaties, AI chat (raadplegend + actiegericht). E-learning module voor beveiligers in voorbereiding.",
+    "chips": []
+  },
+  {
+    "id": 100,
+    "type": "m",
+    "date": "2024-06-01",
+    "time": "",
+    "title": "Ody in dienst als productmanager",
+    "body": "",
+    "quote": "",
+    "quoteSrc": "",
+    "chips": []
+  }
+];
+
+let nextId = 100;
+
+// ── HELPERS ────────────────────────────────────────────────────────────────────
+const typeLabels = { m:'Mijlpaal', i:'Inzicht', r:'Resultaat', t:'Testimonial', o:'Doelstelling', p:'Productvisie' };
+
+const MONTHS_NL = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+
+function formatDate(dateStr, timeStr) {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  let label = `${d} ${MONTHS_NL[m-1]} ${y}`;
+  if (timeStr) label += ` · ${timeStr}`;
+  return label;
+}
+
+function getYear(dateStr) {
+  return dateStr ? dateStr.split('-')[0] : '?';
+}
+
+let sortAsc = false;
+
+function sortedEntries() {
+  return [...entries].sort((a, b) => {
+    const da = (a.date || '0000-00-00') + (a.time || '00:00');
+    const db = (b.date || '0000-00-00') + (b.time || '00:00');
+    const cmp = da < db ? -1 : da > db ? 1 : 0;
+    return sortAsc ? cmp : -cmp;
+  });
+}
+
+function toggleSort() {
+  sortAsc = !sortAsc;
+  const btn = document.getElementById('sortToggle');
+  const icon = document.getElementById('sortIcon');
+  if (sortAsc) {
+    btn.childNodes[2].textContent = 'Oudste eerst';
+    icon.innerHTML = '<line x1="12" y1="5" x2="12" y2="19"/><polyline points="5 12 19 12 12 5"/>';
+  } else {
+    btn.childNodes[2].textContent = 'Nieuwste eerst';
+    icon.innerHTML = '<line x1="12" y1="5" x2="12" y2="19"/><polyline points="5 12 12 19 19 12"/>';
+  }
+  render();
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────────
+function render() {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = '';
+
+  const sorted = sortedEntries();
+  let currentYear = null;
+  let tlLine = null;
+
+  sorted.forEach(entry => {
+    const year = getYear(entry.date);
+
+    // Nieuw jaar → divider + nieuwe tl-line
+    if (year !== currentYear) {
+      currentYear = year;
+
+      const divider = document.createElement('div');
+      divider.className = 'year-divider';
+      divider.innerHTML = `<span class="year-label">${year}</span><span class="year-line"></span>`;
+      main.appendChild(divider);
+
+      const section = document.createElement('div');
+      section.className = 'tl-line';
+      main.appendChild(section);
+      tlLine = section;
+    }
+
+    const row = buildRow(entry);
+    tlLine.appendChild(row);
+  });
+
+  applyFilter();
+  if (editMode) applyEditMode(true);
+}
+
+function buildRow(entry) {
+  const row = document.createElement('div');
+  row.className = 'tl-row';
+  row.dataset.c = entry.type;
+  row.dataset.id = entry.id;
+
+  const dateLabel = formatDate(entry.date, entry.time);
+
+  let cardContent = '';
+  if (entry.type === 't') {
+    cardContent = `
+      <div class="card-title" ${editMode ? 'contenteditable="true"' : ''}>${entry.title || ''}</div>
+      ${entry.quote ? `<div class="quote" ${editMode ? 'contenteditable="true"' : ''}>${entry.quote}</div>` : ''}
+      ${entry.quoteSrc ? `<div class="quote-src" ${editMode ? 'contenteditable="true"' : ''}>${entry.quoteSrc}</div>` : ''}
+      ${entry.body ? `<div class="card-body" style="margin-top:.5rem" ${editMode ? 'contenteditable="true"' : ''}>${entry.body}</div>` : ''}
+    `;
+  } else {
+    cardContent = `
+      <div class="card-title" ${editMode ? 'contenteditable="true"' : ''}>${entry.title || ''}</div>
+      ${entry.body ? `<div class="card-body" ${editMode ? 'contenteditable="true"' : ''}>${entry.body}</div>` : ''}
+    `;
+  }
+
+  const chipsHtml = (entry.chips || []).map(c => `<span class="chip">${escHtml(c)}</span>`).join('');
+
+  row.innerHTML = `
+    <div class="dot-wrap"><div class="dot ${entry.type}"></div></div>
+    <div class="card">
+      <button class="delete-btn" title="Verwijder" onclick="deleteEntry(${entry.id})">×</button>
+      <div class="card-top">
+        <span class="badge ${entry.type}">${typeLabels[entry.type]}</span>
+        <div class="date-edit-wrap">
+          <input
+            class="date-input"
+            type="date"
+            value="${entry.date || ''}"
+            data-id="${entry.id}"
+            data-field="date"
+            title="Datum aanpassen"
+            ${editMode ? '' : 'readonly tabindex="-1"'}
+            onchange="updateDate(this)"
+          >
+          <input
+            class="date-input"
+            type="time"
+            value="${entry.time || ''}"
+            data-id="${entry.id}"
+            data-field="time"
+            title="Tijd aanpassen"
+            style="width:80px"
+            ${editMode ? '' : 'readonly tabindex="-1"'}
+            onchange="updateDate(this)"
+          >
+        </div>
+      </div>
+      ${cardContent}
+      ${chipsHtml}
+    </div>
+  `;
+
+  return row;
+}
+
+// ── DATUM UPDATE → hersorteren ─────────────────────────────────────────────────
+function updateDate(input) {
+  const id = parseInt(input.dataset.id);
+  const field = input.dataset.field;
+  const entry = entries.find(e => e.id === id);
+  if (!entry) return;
+  entry[field] = input.value;
+  render();
+  // Scroll naar het herpositioneerde blokje
+  setTimeout(() => {
+    const el = document.querySelector(`.tl-row[data-id="${id}"]`);
+    if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
+  }, 50);
+}
+
+// ── FILTER ──────────────────────────────────────────────────────────────────────
+const ALL_TYPES = new Set(['m','i','r','t','o','p']);
+let active = new Set(ALL_TYPES);
+
+function filter(c) {
+  const btns = document.querySelectorAll('.toolbar .btn[data-c]');
+  if (c === 'all') {
+    if (active.size === ALL_TYPES.size) { active.clear(); btns.forEach(b=>b.classList.remove('on')); }
+    else { active = new Set(ALL_TYPES); btns.forEach(b=>b.classList.add('on')); }
+  } else {
+    active.has(c) ? active.delete(c) : active.add(c);
+    btns.forEach(b => {
+      if (b.dataset.c === c) b.classList.toggle('on', active.has(c));
+      if (b.dataset.c === 'all') b.classList.toggle('on', active.size === ALL_TYPES.size);
+    });
+  }
+  applyFilter();
+}
+
+function applyFilter() {
+  document.querySelectorAll('.tl-row').forEach(r => {
+    r.classList.toggle('hidden', !active.has(r.dataset.c));
+  });
+}
+
+// ── WACHTWOORDBEVEILIGING ──────────────────────────────────────────────────────
+const PW_HASH = 'dbd48f0dfd0fe4b5547c205ddf04f3259475a3ed6a72619790b822cc7ede0a19';
+
+function openPwModal() {
+  document.getElementById('pwInput').value = '';
+  document.getElementById('pwError').classList.remove('visible');
+  document.getElementById('pwModal').classList.add('visible');
+  setTimeout(() => document.getElementById('pwInput').focus(), 50);
+}
+function closePwModal() {
+  document.getElementById('pwModal').classList.remove('visible');
+}
+async function checkPassword() {
+  const val = document.getElementById('pwInput').value;
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(val));
+  const hash = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  if (hash === PW_HASH) {
+    sessionStorage.setItem('edit_unlocked', '1');
+    sessionStorage.setItem('edit_pw', document.getElementById('pwInput').value);
+    closePwModal();
+    activateEditMode();
+  } else {
+    document.getElementById('pwError').classList.add('visible');
+    document.getElementById('pwInput').select();
+  }
+}
+document.getElementById('pwModal').addEventListener('click', function(e) {
+  if (e.target === this) closePwModal();
+});
+
+// ── EDIT MODE ───────────────────────────────────────────────────────────────────
+let editMode = false;
+
+function toggleEdit() {
+  if (!editMode) {
+    // Controleer of sessie al ontgrendeld is
+    if (sessionStorage.getItem('edit_unlocked') === '1') {
+      activateEditMode();
+    } else {
+      openPwModal();
+    }
+  } else {
+    deactivateEditMode();
+  }
+}
+
+function activateEditMode() {
+  editMode = true;
+  const btn = document.getElementById('editToggle');
+  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Klaar';
+  btn.classList.add('active');
+  document.body.classList.add('edit-mode-on');
+  applyEditMode(true);
+}
+
+function deactivateEditMode() {
+  editMode = false;
+  saveFromDom();
+  const btn = document.getElementById('editToggle');
+  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bewerken';
+  btn.classList.remove('active');
+  document.body.classList.remove('edit-mode-on');
+  applyEditMode(false);
+  render();
+}
+
+function applyEditMode(on) {
+  document.querySelectorAll('.card-title,.card-body,.quote,.quote-src')
+    .forEach(el => el.contentEditable = on ? 'true' : 'false');
+  document.querySelectorAll('.date-input').forEach(inp => {
+    if (on) { inp.removeAttribute('readonly'); inp.removeAttribute('tabindex'); }
+    else { inp.setAttribute('readonly',''); inp.setAttribute('tabindex','-1'); }
+  });
+}
+
+function saveFromDom() {
+  document.querySelectorAll('.tl-row[data-id]').forEach(row => {
+    const id = parseInt(row.dataset.id);
+    const entry = entries.find(e => e.id === id);
+    if (!entry) return;
+    const title = row.querySelector('.card-title');
+    const body  = row.querySelector('.card-body');
+    const quote = row.querySelector('.quote');
+    const src   = row.querySelector('.quote-src');
+    if (title) entry.title = title.innerHTML;
+    if (body)  entry.body  = body.innerHTML;
+    if (quote) entry.quote = quote.innerHTML;
+    if (src)   entry.quoteSrc = src.innerHTML;
+  });
+}
+
+// ── DELETE ──────────────────────────────────────────────────────────────────────
+function deleteEntry(id) {
+  if (confirm('Dit blokje verwijderen?')) {
+    entries = entries.filter(e => e.id !== id);
+    render();
+  }
+}
+
+// ── ADD PANEL ───────────────────────────────────────────────────────────────────
+let selectedType = 'm';
+
+function openPanel() {
+  document.getElementById('addPanel').classList.add('visible');
+  document.getElementById('inputTitle').focus();
+}
+function closePanel() {
+  document.getElementById('addPanel').classList.remove('visible');
+  resetForm();
+}
+function resetForm() {
+  document.getElementById('inputDate').value = '';
+  document.getElementById('inputTime').value = '';
+  document.getElementById('inputTitle').value = '';
+  document.getElementById('inputBody').value = '';
+  document.getElementById('inputQuote').value = '';
+  document.getElementById('inputSrc').value = '';
+  document.querySelectorAll('.type-pill').forEach(p => p.classList.remove('sel'));
+  document.querySelector('.type-pill[data-v="m"]').classList.add('sel');
+  selectedType = 'm';
+  document.getElementById('quoteExtra').classList.remove('visible');
+}
+
+function selectType(pill) {
+  document.querySelectorAll('.type-pill').forEach(p => p.classList.remove('sel'));
+  pill.classList.add('sel');
+  selectedType = pill.dataset.v;
+  document.getElementById('quoteExtra').classList.toggle('visible', selectedType === 't');
+}
+
+function addCard() {
+  const type  = selectedType;
+  const date  = document.getElementById('inputDate').value;
+  const time  = document.getElementById('inputTime').value;
+  const title = document.getElementById('inputTitle').value.trim();
+  const body  = document.getElementById('inputBody').value.trim();
+  const quote = document.getElementById('inputQuote').value.trim();
+  const src   = document.getElementById('inputSrc').value.trim();
+
+  if (!title) { document.getElementById('inputTitle').focus(); return; }
+  if (!date)  { document.getElementById('inputDate').focus(); return; }
+
+  const entry = { id: nextId++, type, date, time, title, body, quote, quoteSrc: src, chips: [] };
+  entries.push(entry);
+
+  closePanel();
+  render();
+
+  setTimeout(() => {
+    const el = document.querySelector(`.tl-row[data-id="${entry.id}"]`);
+    if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
+  }, 50);
+}
+
+// ── SLUIT PANEL BIJ KLIK BUITEN ────────────────────────────────────────────────
+document.addEventListener('click', function(e) {
+  const panel = document.getElementById('addPanel');
+  const addBtn = document.querySelector('.btn-add');
+  if (panel.classList.contains('visible') && !panel.contains(e.target) && e.target !== addBtn && !addBtn.contains(e.target)) {
+    closePanel();
+  }
+});
+
+// Geen enter in enkele regels
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.activeElement.contentEditable === 'true') {
+    if (!document.activeElement.classList.contains('card-body')) e.preventDefault();
+  }
+});
+
+// ── OPSLAAN VIA SERVER ─────────────────────────────────────────────────────────
+async function saveToServer() {
+  if (!editMode && !confirm('Wil je de huidige stand opslaan?')) return;
+  if (editMode) saveFromDom();
+
+  const btn   = document.getElementById('saveBtn');
+  const label = document.getElementById('saveBtnLabel');
+
+  // Wachtwoord ophalen uit sessie (al ingevoerd bij bewerken)
+  const pw = sessionStorage.getItem('edit_pw');
+  if (!pw) {
+    label.textContent = 'Opslaan';
+    alert('Log eerst in via de Bewerken-knop.');
+    return;
+  }
+
+  btn.classList.add('saving');
+  label.textContent = 'Bezig…';
+
+  try {
+    const res = await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw, entries })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.status);
+
+    btn.classList.remove('saving');
+    btn.classList.add('saved');
+    label.textContent = 'Opgeslagen ✓';
+    setTimeout(() => { btn.classList.remove('saved'); label.textContent = 'Opslaan'; }, 3000);
+
+  } catch(e) {
+    btn.classList.remove('saving');
+    btn.classList.add('error');
+    label.textContent = 'Mislukt';
+    setTimeout(() => { btn.classList.remove('error'); label.textContent = 'Opslaan'; }, 4000);
+    console.error('Opslaan mislukt:', e.message);
+  }
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>

@@ -336,7 +336,260 @@
 // Elke entry heeft: id, type (m/i/r/t/o), date (YYYY-MM-DD), time (HH:MM, optioneel),
 // title, body (HTML toegestaan), quote, quoteSrc, chips (array)
 
-let entries = [];
+let entries = [
+  {
+    "id": 1,
+    "type": "m",
+    "date": "2023-06-01",
+    "time": "",
+    "title": "Opstart Trigion Startup — bewust los van de moederorganisatie",
+    "body": "Een klein team begint buiten de Trigion-lijn om snel te kunnen bewegen en te experimenteren met digitale innovatie in de beveiligingssector.",
+    "chips": []
+  },
+  {
+    "id": 2,
+    "type": "i",
+    "date": "2023-09-01",
+    "time": "",
+    "title": "De markt is versnipperd — en mensen zijn het zat",
+    "body": "Eerste gesprekken bevestigen: systemen praten niet met elkaar, rapportages kosten onnodig tijd, frustratie is groot. Dit wordt de kern van de propositie.",
+    "chips": []
+  },
+  {
+    "id": 3,
+    "type": "m",
+    "date": "2024-06-01",
+    "time": "",
+    "title": "MVP's gebouwd: OnePersonal (app) &amp; OneFacility (dashboard)",
+    "body": "Twee productlijnen worden concreet. Eerste proof-of-concepts gebouwd en intern getest.",
+    "chips": []
+  },
+  {
+    "id": 4,
+    "type": "o",
+    "date": "2024-09-01",
+    "time": "",
+    "title": "Eerste doelcyclus: stabiele app, klaar voor pilotgebruikers",
+    "body": "App op fysieke telefoon, beveiligers kunnen zelfstandig starten, feedback ophalen. Log aggregatie en analytics tooling geïmplementeerd.",
+    "chips": []
+  },
+  {
+    "id": 5,
+    "type": "m",
+    "date": "2025-12-15",
+    "time": "",
+    "title": "Eerste echte klantpilot — H'ART Museum",
+    "body": "6 beveiligers werken een week lang met de app voor taken, meldingen en rondes.",
+    "chips": [
+      "6 beveiligers",
+      "1 locatie"
+    ]
+  },
+  {
+    "id": 6,
+    "type": "r",
+    "date": "2025-12-21",
+    "time": "",
+    "title": "Tijdens rondes: duidelijke meerwaarde. Op zaal: portofoon wint nog",
+    "body": "Redelijk stabiel na dag 1. Wifi-afhankelijkheid bleek groot obstakel. Tijden aanpassen niet mogelijk → onjuiste rapportages. Desktop-variant ontbrak voor receptietaken.",
+    "chips": []
+  },
+  {
+    "id": 7,
+    "type": "i",
+    "date": "2025-12-21",
+    "time": "",
+    "title": "Protocollen zijn het échte knelpunt",
+    "body": "Subtaken sloten niet aan op de praktijk, volgorde klopte niet, content niet actueel. Digitalisering legt bloot wat al schuurt.",
+    "chips": []
+  },
+  {
+    "id": 8,
+    "type": "i",
+    "date": "2025-12-21",
+    "time": "",
+    "title": "Gedragsverandering botst met beroepsidentiteit",
+    "body": "Een beveiliger hoort zichtbaar alert te zijn, met portofoon. Werken op een telefoon voelt onprofessioneel. Weerstand is identity-gedreven — diep verankerd in opleiding en cultuur.",
+    "chips": []
+  },
+  {
+    "id": 9,
+    "type": "i",
+    "date": "2025-12-21",
+    "time": "",
+    "title": "Adoptie is een organisatievraagstuk, geen IT-vraagstuk",
+    "body": "Functionerende technologie leidt niet automatisch tot gebruik. Duurzame adoptie vraagt technologie + organisatie + leiderschap die elkaar versterken.",
+    "chips": []
+  },
+  {
+    "id": 10,
+    "type": "t",
+    "date": "2025-12-21",
+    "time": "",
+    "title": "Stem uit het veld — H'ART Museum",
+    "quote": "\"Takenlijst voegt vooral waarde toe voor nieuwe beveiligers.\"",
+    "quoteSrc": "— Beveiliger, H'ART Museum",
+    "chips": []
+  },
+  {
+    "id": 11,
+    "type": "m",
+    "date": "2026-02-02",
+    "time": "",
+    "title": "Pilot 2 — Gemeente Zaanstad: grotere pilot vervangt Word, PDF en mail",
+    "body": "11 beveiligers + 6 stakeholders. Zaanstad gebruikt geen Sequrix.",
+    "chips": [
+      "11 beveiligers",
+      "6 stakeholders"
+    ]
+  },
+  {
+    "id": 12,
+    "type": "r",
+    "date": "2026-02-13",
+    "time": "",
+    "title": "Technisch werkbaar · adoptie gemengd · inzicht onvoldoende",
+    "body": "Meldingen maken werkt. Basis stabiel. Maar: app voelt als extra systeem, dubbele registratie blijft, procesondersteuning ontbreekt nog.",
+    "chips": []
+  },
+  {
+    "id": 13,
+    "type": "r",
+    "date": "2026-02-13",
+    "time": "",
+    "title": "Klanten willen al overstappen — de basis is er",
+    "body": "Zowel beveiligers als stakeholders geven aan nu al te willen overstappen. Nog nodig: zoekfunctie/passenmodule, terugblik op rapportages, multi-user portal.",
+    "chips": []
+  },
+  {
+    "id": 14,
+    "type": "t",
+    "date": "2026-02-13",
+    "time": "",
+    "title": "Stem van een beveiliger — Gemeente Zaanstad",
+    "quote": "\"Ik moet er nu in werken, maar ik werk er nog niet mee.\"",
+    "quoteSrc": "— Beveiliger, Gemeente Zaanstad",
+    "chips": []
+  },
+  {
+    "id": 15,
+    "type": "t",
+    "date": "2026-02-13",
+    "time": "",
+    "title": "Stem van een stakeholder — Gemeente Zaanstad",
+    "quote": "\"Ik moet scrollen om te zien welke pas het was.\"",
+    "quoteSrc": "— Stakeholder, Gemeente Zaanstad",
+    "chips": []
+  },
+  {
+    "id": 16,
+    "type": "m",
+    "date": "2026-03-04",
+    "time": "",
+    "title": "Pilot 3 — Gemeente Arnhem: langste pilot tot nu toe (3 weken)",
+    "body": "12 beveiligers + 6 stakeholders. Totaal over alle pilots: <strong>35 beveiligers &amp; 12 stakeholders</strong>.",
+    "chips": [
+      "12 beveiligers",
+      "6 stakeholders",
+      "Totaal: 35 + 12"
+    ]
+  },
+  {
+    "id": 17,
+    "type": "r",
+    "date": "2026-03-25",
+    "time": "",
+    "title": "Technische instabiliteit remt adoptie",
+    "body": "Uitloggen, dataverlies, hoge batterijconsumptie, wifi-afhankelijkheid. Gebruikers vielen terug op Sequrix. Werk kostte meer tijd in plaats van minder.",
+    "chips": []
+  },
+  {
+    "id": 18,
+    "type": "i",
+    "date": "2026-03-25",
+    "time": "",
+    "title": "Stakeholders hebben fundamenteel verschillende informatiebehoefte",
+    "body": "Contractmanager zoekt overzicht &amp; controle. Veiligheidscoördinator zoekt detail &amp; context. Eén rapportage werkt niet voor iedereen.",
+    "chips": []
+  },
+  {
+    "id": 19,
+    "type": "t",
+    "date": "2026-03-25",
+    "time": "",
+    "title": "Stem van een veiligheidscoördinator — Gemeente Arnhem",
+    "quote": "\"Signalen en situaties — zoals overlast, specifieke personen — zie ik nu niet terug.\"",
+    "quoteSrc": "— Veiligheidscoördinator, Gemeente Arnhem",
+    "chips": []
+  },
+  {
+    "id": 20,
+    "type": "i",
+    "date": "2026-03-26",
+    "time": "",
+    "title": "4 structurele lessen uit alle pilots",
+    "body": "<ul><li>Gebrek aan standaardisatie in content, protocollen en werkwijzen</li><li>Fragmentatie van tooling versterkt scepsis en wantrouwen</li><li>Gedragsverandering botst met beroepsidentiteit van beveiligers</li><li>Adoptie is een organisatievraagstuk, niet alleen een IT-vraagstuk</li></ul>",
+    "chips": []
+  },
+  {
+    "id": 21,
+    "type": "o",
+    "date": "2026-03-31",
+    "time": "",
+    "title": "Afgerond in Q1: plattegronden, log aggregatie, analytics, specifieke rapportage",
+    "body": "SVG plattegronden + ruimte polygonen in portal. Log aggregatie en analytics geïmplementeerd in app en portal. Specifieke rapportage downloadbaar in portal.",
+    "chips": []
+  },
+  {
+    "id": 22,
+    "type": "o",
+    "date": "2026-06-01",
+    "time": "",
+    "title": "Nu: commerciële propositie, stabiliteit, portal-flows, juridisch",
+    "body": "Inzichten ophalen bij 10–15 klanten voor waardevalidatie. Prijsstrategie in ontwikkeling. Juridische acties kortetermijn at risk.",
+    "chips": []
+  },
+  {
+    "id": 24,
+    "type": "p",
+    "date": "2026-01-01",
+    "time": "",
+    "title": "Productvisie",
+    "body": "Vul hier de productvisie in.",
+    "chips": []
+  },
+  {
+    "id": 23,
+    "type": "m",
+    "date": "2026-07-01",
+    "time": "",
+    "title": "Richting: stabiele release, passenmodule, notificaties, AI chat fundament",
+    "body": "Passenmodule MVP, perioderapport, proactieve notificaties, AI chat (raadplegend + actiegericht). E-learning module voor beveiligers in voorbereiding.",
+    "chips": []
+  },
+  {
+    "id": 100,
+    "type": "m",
+    "date": "2024-06-01",
+    "time": "",
+    "title": "Ody in dienst als productmanager",
+    "body": "",
+    "quote": "",
+    "quoteSrc": "",
+    "chips": []
+  },
+  {
+    "id": 100,
+    "type": "m",
+    "date": "2022-01-01",
+    "time": "",
+    "title": "Test",
+    "body": "",
+    "quote": "",
+    "quoteSrc": "",
+    "chips": []
+  }
+];
 
 let nextId = 100;
 

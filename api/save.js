@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const PW_HASH = 'dbd48f0dfd0fe4b5547c205ddf04f3259475a3ed6a72619790b822cc7ede0a19';
 const GH_OWNER  = 'mmilte';
 const GH_REPO   = 'OneFacility-tijdlijn';
-const GH_FILE   = 'index.html';
+const GH_FILE   = 'public/index.html';
 const GH_BRANCH = 'main';
 
 module.exports = async (req, res) => {

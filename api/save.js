@@ -73,6 +73,10 @@ module.exports = async (req, res) => {
       throw new Error(err.message || pushRes.status);
     }
 
+    // Trigger Vercel redeploy
+    const hook = process.env.DEPLOY_HOOK;
+    if (hook) await fetch(hook, { method: 'POST' });
+
     return res.status(200).json({ ok: true });
 
   } catch (e) {

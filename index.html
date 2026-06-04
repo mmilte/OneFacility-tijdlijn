@@ -228,12 +228,9 @@
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
       Bewerken
     </button>
-    <button class="btn btn-save" id="saveBtn" onclick="saveToGitHub()">
+    <button class="btn btn-save" id="saveBtn" onclick="saveToServer()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       <span id="saveBtnLabel">Opslaan</span>
-    </button>
-    <button class="btn btn-token" id="tokenBtn" onclick="openTokenModal()" title="GitHub toegang instellen">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
     </button>
   </div>
 </header>
@@ -255,24 +252,6 @@
 </div>
 
 <!-- TOKEN MODAL -->
-<div class="modal-overlay" id="tokenModal">
-  <div class="modal">
-    <h3>GitHub toegang instellen</h3>
-    <p>Voer een GitHub Personal Access Token in met <strong>repo</strong>-rechten. Dit wordt alleen lokaal in je browser opgeslagen.</p>
-    <div class="form-row" style="margin-top:1rem">
-      <label>Personal Access Token</label>
-      <input type="password" id="tokenInput" placeholder="ghp_...">
-    </div>
-    <p style="font-size:.72rem;color:var(--ink-3);margin-top:.4rem">
-      Aanmaken via <a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank" style="color:var(--m-ink)">github.com/settings/tokens</a> → selecteer <em>repo</em>.
-    </p>
-    <div class="panel-actions" style="margin-top:1rem">
-      <button class="btn-primary" onclick="saveToken()">Opslaan</button>
-      <button class="btn-cancel" onclick="closeTokenModal()">Annuleren</button>
-      <button class="btn-cancel" style="margin-left:auto;color:#c0392b" onclick="clearToken()">Token verwijderen</button>
-    </div>
-  </div>
-</div>
 
 <nav class="toolbar">
   <span class="toolbar-label">Filter:</span>
@@ -806,6 +785,7 @@ async function checkPassword() {
   const hash = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
   if (hash === PW_HASH) {
     sessionStorage.setItem('edit_unlocked', '1');
+    sessionStorage.setItem('edit_pw', document.getElementById('pwInput').value);
     closePwModal();
     activateEditMode();
   } else {
@@ -957,91 +937,33 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// ── GITHUB OPSLAAN ─────────────────────────────────────────────────────────────
-const GH_OWNER = 'mmilte';
-const GH_REPO  = 'OneFacility-tijdlijn';
-const GH_FILE  = 'index.html';
-const GH_BRANCH = 'main';
-
-function getToken() { return localStorage.getItem('gh_token'); }
-
-function openTokenModal() {
-  const existing = getToken();
-  if (existing) document.getElementById('tokenInput').value = existing;
-  document.getElementById('tokenModal').classList.add('visible');
-}
-function closeTokenModal() {
-  document.getElementById('tokenModal').classList.remove('visible');
-}
-function saveToken() {
-  const val = document.getElementById('tokenInput').value.trim();
-  if (!val) return;
-  localStorage.setItem('gh_token', val);
-  closeTokenModal();
-  updateTokenIndicator();
-}
-function clearToken() {
-  localStorage.removeItem('gh_token');
-  document.getElementById('tokenInput').value = '';
-  closeTokenModal();
-  updateTokenIndicator();
-}
-function updateTokenIndicator() {
-  const btn = document.getElementById('tokenBtn');
-  btn.style.color = getToken() ? 'var(--r-ink)' : 'var(--ink-3)';
-  btn.title = getToken() ? 'GitHub token ingesteld ✓ — klik om te wijzigen' : 'GitHub toegang instellen';
-}
-
-async function saveToGitHub() {
-  const token = getToken();
-  if (!token) { openTokenModal(); return; }
+// ── OPSLAAN VIA SERVER ─────────────────────────────────────────────────────────
+async function saveToServer() {
+  if (!editMode && !confirm('Wil je de huidige stand opslaan?')) return;
+  if (editMode) saveFromDom();
 
   const btn   = document.getElementById('saveBtn');
   const label = document.getElementById('saveBtnLabel');
 
-  // Sla eerst eventuele open bewerkingen op
-  if (editMode) saveFromDom();
+  // Wachtwoord ophalen uit sessie (al ingevoerd bij bewerken)
+  const pw = sessionStorage.getItem('edit_pw');
+  if (!pw) {
+    label.textContent = 'Opslaan';
+    alert('Log eerst in via de Bewerken-knop.');
+    return;
+  }
 
   btn.classList.add('saving');
   label.textContent = 'Bezig…';
 
   try {
-    // 1. Haal huidige bestand op (SHA nodig voor update)
-    const metaRes = await fetch(
-      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}`,
-      { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } }
-    );
-    if (!metaRes.ok) throw new Error(`GitHub fout: ${metaRes.status}`);
-    const meta = await metaRes.json();
-
-    // 2. Bouw nieuwe inhoud — vervang entries-array in de broncode
-    const rawRes = await fetch(
-      `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_FILE}`
-    );
-    const rawHtml = await rawRes.text();
-
-    const newEntries = JSON.stringify(entries, null, 2);
-    const updated = rawHtml.replace(
-      /let entries = \[[\s\S]*?\];/,
-      `let entries = ${newEntries};`
-    );
-
-    // 3. Push naar GitHub
-    const body = JSON.stringify({
-      message: `Update tijdlijn — ${new Date().toLocaleString('nl-NL')}`,
-      content: btoa(unescape(encodeURIComponent(updated))),
-      sha: meta.sha,
-      branch: GH_BRANCH
+    const res = await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw, entries })
     });
-
-    const pushRes = await fetch(
-      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
-      { method: 'PUT', headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' }, body }
-    );
-    if (!pushRes.ok) {
-      const err = await pushRes.json();
-      throw new Error(err.message || pushRes.status);
-    }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.status);
 
     btn.classList.remove('saving');
     btn.classList.add('saved');
@@ -1054,17 +976,10 @@ async function saveToGitHub() {
     label.textContent = 'Mislukt';
     setTimeout(() => { btn.classList.remove('error'); label.textContent = 'Opslaan'; }, 4000);
     console.error('Opslaan mislukt:', e.message);
-    if (e.message.includes('401') || e.message.includes('Bad credentials')) openTokenModal();
   }
 }
 
-// Sluit modal bij klik buiten
-document.getElementById('tokenModal').addEventListener('click', function(e) {
-  if (e.target === this) closeTokenModal();
-});
-
 // ── INIT ───────────────────────────────────────────────────────────────────────
-updateTokenIndicator();
 render();
 </script>
 </body>

@@ -17,6 +17,7 @@
     --r-bg:#eaf3de; --r-ink:#27500a; --r-border:#a8d87a;
     --t-bg:#faece7; --t-ink:#712b13; --t-border:#f0a080;
     --o-bg:#edf5ff; --o-ink:#0a3d7a; --o-border:#90c4f5;
+    --p-bg:#fce4f3; --p-ink:#8b1a6b; --p-border:#e89dd6;
     --font-display:'DM Serif Display',Georgia,serif;
     --font-body:'DM Sans',-apple-system,sans-serif;
   }
@@ -49,6 +50,7 @@
   .btn.on[data-c="r"]   { background:var(--r-bg); color:var(--r-ink); border-color:var(--r-border); }
   .btn.on[data-c="t"]   { background:var(--t-bg); color:var(--t-ink); border-color:var(--t-border); }
   .btn.on[data-c="o"]   { background:var(--o-bg); color:var(--o-ink); border-color:var(--o-border); }
+  .btn.on[data-c="p"]   { background:var(--p-bg); color:var(--p-ink); border-color:var(--p-border); }
   .btn-add { background:var(--m-bg); color:var(--m-ink); border-color:var(--m-border); font-weight:500; }
   .btn-add:hover { background:var(--m-ink); color:#fff; border-color:var(--m-ink); }
   .btn-edit { background:var(--white); }
@@ -86,6 +88,7 @@
   .dot.r{background:var(--r-bg);border-color:var(--r-ink);}
   .dot.t{background:var(--t-bg);border-color:var(--t-ink);}
   .dot.o{background:var(--o-bg);border-color:var(--o-ink);}
+  .dot.p{background:var(--p-bg);border-color:var(--p-ink);}
 
   /* CARD */
   .card { flex:1; background:var(--white); border:1px solid var(--line); border-radius:10px; padding:1rem 1.1rem; transition:border-color .15s,box-shadow .15s; position:relative; }
@@ -97,6 +100,7 @@
   .badge.r{background:var(--r-bg);color:var(--r-ink);}
   .badge.t{background:var(--t-bg);color:var(--t-ink);}
   .badge.o{background:var(--o-bg);color:var(--o-ink);}
+  .badge.p{background:var(--p-bg);color:var(--p-ink);}
   .card-date { font-size:.72rem; color:var(--ink-3); margin-left:auto; font-weight:300; }
 
   /* Datum-edit veld (edit mode) */
@@ -173,6 +177,7 @@
   .type-pill[data-v="r"].sel{background:var(--r-bg);color:var(--r-ink);border-color:var(--r-border);}
   .type-pill[data-v="t"].sel{background:var(--t-bg);color:var(--t-ink);border-color:var(--t-border);}
   .type-pill[data-v="o"].sel{background:var(--o-bg);color:var(--o-ink);border-color:var(--o-border);}
+  .type-pill[data-v="p"].sel{background:var(--p-bg);color:var(--p-ink);border-color:var(--p-border);}
   .panel-actions { display:flex; gap:.5rem; margin-top:1rem; }
   .btn-primary { font-family:var(--font-body); font-size:.8rem; font-weight:500; padding:7px 16px; border-radius:8px; border:none; background:var(--m-ink); color:#fff; cursor:pointer; transition:opacity .15s; }
   .btn-primary:hover { opacity:.85; }
@@ -252,6 +257,7 @@
   <button class="btn on" data-c="r"   onclick="filter('r')">Resultaat</button>
   <button class="btn on" data-c="t"   onclick="filter('t')">Testimonial</button>
   <button class="btn on" data-c="o"   onclick="filter('o')">OKR</button>
+  <button class="btn on" data-c="p"   onclick="filter('p')">Productvisie</button>
   <div class="toolbar-sep"></div>
   <button class="btn" id="sortToggle" onclick="toggleSort()" title="Volgorde omdraaien">
     <svg id="sortIcon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="5 12 19 12 12 5"/></svg>
@@ -281,6 +287,7 @@
       <button class="type-pill" data-v="r" onclick="selectType(this)">Resultaat</button>
       <button class="type-pill" data-v="t" onclick="selectType(this)">Testimonial</button>
       <button class="type-pill" data-v="o" onclick="selectType(this)">OKR</button>
+      <button class="type-pill" data-v="p" onclick="selectType(this)">Productvisie</button>
     </div>
   </div>
 
@@ -463,6 +470,12 @@ let entries = [
     chips:[]
   },
   {
+    id: 24, type:'p', date:'2026-01-01', time:'',
+    title:'Productvisie',
+    body:'Vul hier de productvisie in.',
+    chips:[]
+  },
+  {
     id: 23, type:'m', date:'2026-07-01', time:'',
     title:'Richting: stabiele release, passenmodule, notificaties, AI chat fundament',
     body:'Passenmodule MVP, perioderapport, proactieve notificaties, AI chat (raadplegend + actiegericht). E-learning module voor beveiligers in voorbereiding.',
@@ -473,7 +486,7 @@ let entries = [
 let nextId = 100;
 
 // ── HELPERS ────────────────────────────────────────────────────────────────────
-const typeLabels = { m:'Mijlpaal', i:'Inzicht', r:'Resultaat', t:'Testimonial', o:'OKR' };
+const typeLabels = { m:'Mijlpaal', i:'Inzicht', r:'Resultaat', t:'Testimonial', o:'OKR', p:'Productvisie' };
 
 const MONTHS_NL = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
 
@@ -633,18 +646,19 @@ function updateDate(input) {
 }
 
 // ── FILTER ──────────────────────────────────────────────────────────────────────
-let active = new Set(['m','i','r','t','o']);
+const ALL_TYPES = new Set(['m','i','r','t','o','p']);
+let active = new Set(ALL_TYPES);
 
 function filter(c) {
   const btns = document.querySelectorAll('.toolbar .btn[data-c]');
   if (c === 'all') {
-    if (active.size === 5) { active.clear(); btns.forEach(b=>b.classList.remove('on')); }
-    else { active = new Set(['m','i','r','t','o']); btns.forEach(b=>b.classList.add('on')); }
+    if (active.size === ALL_TYPES.size) { active.clear(); btns.forEach(b=>b.classList.remove('on')); }
+    else { active = new Set(ALL_TYPES); btns.forEach(b=>b.classList.add('on')); }
   } else {
     active.has(c) ? active.delete(c) : active.add(c);
     btns.forEach(b => {
       if (b.dataset.c === c) b.classList.toggle('on', active.has(c));
-      if (b.dataset.c === 'all') b.classList.toggle('on', active.size === 5);
+      if (b.dataset.c === 'all') b.classList.toggle('on', active.size === ALL_TYPES.size);
     });
   }
   applyFilter();

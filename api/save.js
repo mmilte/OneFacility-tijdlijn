@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 
-const PW_HASH = 'dbd48f0dfd0fe4b5547c205ddf04f3259475a3ed6a72619790b822cc7ede0a19';
+const PW_HASH = '90543ca1813baaaa6f2e1ce4d1c6205e9e158dea25c30d2632edee385ca1b60f';
 const GH_OWNER  = 'mmilte';
 const GH_REPO   = 'OneFacility-tijdlijn';
 const GH_FILE   = 'public/index.html';

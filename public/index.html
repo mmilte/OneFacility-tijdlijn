@@ -129,6 +129,44 @@
   .quote-src { font-size:.72rem; color:var(--ink-3); margin-top:.3rem; font-family:var(--font-body); }
   .chip { display:inline-block; font-size:.68rem; background:#f3f3ef; border:1px solid var(--line); border-radius:4px; padding:1px 6px; margin:4px 3px 0 0; color:var(--ink-3); }
 
+  /* AFBEELDING & LINK */
+  .card-image { display:block; width:100%; max-height:220px; object-fit:cover; border-radius:8px; margin-bottom:.6rem; background:var(--bg); }
+  .card-link {
+    display:inline-flex; align-items:center; gap:4px; margin-top:.6rem;
+    font-size:.78rem; font-weight:500; color:var(--m-ink); text-decoration:none;
+    border-bottom:1px solid var(--m-border); padding-bottom:1px; transition:opacity .15s;
+  }
+  .card-link:hover { opacity:.7; }
+  .media-edit-row { display:flex; flex-direction:column; gap:.35rem; margin:.5rem 0; }
+  .mini-input {
+    font-family:var(--font-body); font-size:.76rem; color:var(--ink-2);
+    border:1px dashed var(--i-border); background:rgba(255,240,180,.15);
+    padding:4px 7px; border-radius:5px; width:100%;
+  }
+  .mini-input:focus { outline:none; background:rgba(255,240,180,.4); }
+  .mini-input::placeholder { color:var(--ink-3); }
+
+  /* AFBEELDING POSITIONEREN */
+  .image-position-row { display:flex; gap:.7rem; align-items:center; }
+  .card-image-preview { width:110px; height:74px; flex-shrink:0; margin-bottom:0; }
+  .position-grid {
+    display:inline-grid; grid-template-columns:repeat(3,22px); grid-template-rows:repeat(3,22px);
+    gap:3px; padding:5px; border:1px dashed var(--i-border); border-radius:7px;
+    background:rgba(255,240,180,.15); flex-shrink:0;
+  }
+  .position-cell { width:22px; height:22px; border-radius:4px; border:1px solid var(--line); background:var(--white); cursor:pointer; padding:0; transition:all .15s; }
+  .position-cell:hover { border-color:var(--m-border); }
+  .position-cell.sel { background:var(--m-ink); border-color:var(--m-ink); }
+  .position-hint { font-size:.7rem; color:var(--ink-3); }
+
+  /* LABEL BEWERKEN */
+  .type-select {
+    font-family:var(--font-body); font-size:.68rem; font-weight:500;
+    padding:2px 20px 2px 8px; border-radius:20px; cursor:pointer;
+    border:1px dashed var(--i-border); background:rgba(255,240,180,.15); color:var(--ink-2);
+  }
+  .type-select:focus { outline:none; background:rgba(255,240,180,.4); }
+
   /* DELETE BUTTON */
   .delete-btn {
     display:none; position:absolute; top:.6rem; right:.6rem;
@@ -648,7 +686,12 @@ let entries = [
   }
 ];
 
-let nextId = 100;
+// Geen vaste teller: altijd een vers, uniek ID berekenen op basis van de
+// werkelijk aanwezige entries. Voorkomt botsende ID's als deze waarde ooit
+// achterloopt op de opgeslagen data (was de oorzaak van botsende ID's 100/101/102).
+function nextEntryId() {
+  return entries.reduce((max, e) => Math.max(max, e.id || 0), 0) + 1;
+}
 
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 const typeLabels = { m:'Mijlpaal', i:'Inzicht', r:'Resultaat', t:'Testimonial', o:'Doelstelling', p:'Productvisie' };
@@ -755,6 +798,38 @@ function buildRow(entry) {
     `;
   }
 
+  // Label/type: dropdown in bewerkmodus, badge in weergavemodus
+  const typeHtml = editMode
+    ? `<select class="type-select" data-id="${entry.id}" onchange="updateType(this)">
+         ${Object.keys(typeLabels).map(k => `<option value="${k}" ${k === entry.type ? 'selected' : ''}>${typeLabels[k]}</option>`).join('')}
+       </select>`
+    : `<span class="badge ${entry.type}">${typeLabels[entry.type]}</span>`;
+
+  // Afbeelding: cover-beeld bovenaan de kaart, met positie-instelling in bewerkmodus
+  const imgPos = entry.imagePosition || 'center center';
+  const imageHtml = editMode
+    ? `<div class="media-edit-row">
+         <input class="mini-input" type="url" value="${escHtml(entry.image || '')}" data-id="${entry.id}" data-field="image" placeholder="Afbeelding-URL (optioneel)" onchange="updateMedia(this)">
+         ${entry.image ? `
+           <div class="image-position-row">
+             <img class="card-image card-image-preview" src="${escHtml(entry.image)}" style="object-position:${imgPos}" alt="" loading="lazy">
+             <div class="position-grid">
+               ${IMAGE_POSITIONS.map(p => `<button type="button" class="position-cell ${p.value === imgPos ? 'sel' : ''}" title="${p.label}" onclick="setImagePosition(${entry.id},'${p.value}')"></button>`).join('')}
+             </div>
+             <span class="position-hint">Positie</span>
+           </div>
+         ` : ''}
+       </div>`
+    : (entry.image ? `<img class="card-image" src="${escHtml(entry.image)}" style="object-position:${imgPos}" alt="${escHtml(entry.title || '')}" loading="lazy">` : '');
+
+  // Link: knop onderaan de kaart
+  const linkHtml = editMode
+    ? `<div class="media-edit-row">
+         <input class="mini-input" type="url" value="${escHtml(entry.linkUrl || '')}" data-id="${entry.id}" data-field="linkUrl" placeholder="Link-URL (optioneel)" onchange="updateMedia(this)">
+         <input class="mini-input" type="text" value="${escHtml(entry.linkLabel || '')}" data-id="${entry.id}" data-field="linkLabel" placeholder="Link-tekst (bv. Bekijk artikel)" onchange="updateMedia(this)">
+       </div>`
+    : (entry.linkUrl ? `<a class="card-link" href="${escHtml(entry.linkUrl)}" target="_blank" rel="noopener noreferrer">${escHtml(entry.linkLabel || entry.linkUrl)} ↗</a>` : '');
+
   const chipsHtml = (entry.chips || []).map(c => `<span class="chip">${escHtml(c)}</span>`).join('');
 
   row.innerHTML = `
@@ -762,7 +837,7 @@ function buildRow(entry) {
     <div class="card">
       <button class="delete-btn" title="Verwijder" onclick="deleteEntry(${entry.id})">×</button>
       <div class="card-top">
-        <span class="badge ${entry.type}">${typeLabels[entry.type]}</span>
+        ${typeHtml}
         <div class="date-edit-wrap">
           <input
             class="date-input"
@@ -787,8 +862,10 @@ function buildRow(entry) {
           >
         </div>
       </div>
+      ${imageHtml}
       ${cardContent}
       ${chipsHtml}
+      ${linkHtml}
     </div>
   `;
 
@@ -808,6 +885,39 @@ function updateDate(input) {
     const el = document.querySelector(`.tl-row[data-id="${id}"]`);
     if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
   }, 50);
+}
+
+// ── AFBEELDING / LINK UPDATE ──────────────────────────────────────────────────
+function updateMedia(input) {
+  const id = parseInt(input.dataset.id);
+  const field = input.dataset.field;
+  const entry = entries.find(e => e.id === id);
+  if (!entry) return;
+  entry[field] = input.value.trim();
+  render();
+}
+
+// ── AFBEELDING POSITIONEREN ────────────────────────────────────────────────────
+const IMAGE_POSITIONS = [
+  { value:'left top',    label:'Linksboven'  }, { value:'center top',    label:'Boven'   }, { value:'right top',    label:'Rechtsboven'  },
+  { value:'left center', label:'Links'       }, { value:'center center', label:'Midden'  }, { value:'right center', label:'Rechts'       },
+  { value:'left bottom', label:'Linksonder'  }, { value:'center bottom', label:'Onder'   }, { value:'right bottom', label:'Rechtsonder'  },
+];
+
+function setImagePosition(id, pos) {
+  const entry = entries.find(e => e.id === id);
+  if (!entry) return;
+  entry.imagePosition = pos;
+  render();
+}
+
+// ── LABEL (TYPE) UPDATE ────────────────────────────────────────────────────────
+function updateType(select) {
+  const id = parseInt(select.dataset.id);
+  const entry = entries.find(e => e.id === id);
+  if (!entry) return;
+  entry.type = select.value;
+  render();
 }
 
 // ── FILTER ──────────────────────────────────────────────────────────────────────
@@ -887,7 +997,7 @@ function activateEditMode() {
   btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Klaar';
   btn.classList.add('active');
   document.body.classList.add('edit-mode-on');
-  applyEditMode(true);
+  render();
 }
 
 function deactivateEditMode() {
@@ -977,7 +1087,7 @@ function addCard() {
   if (!title) { document.getElementById('inputTitle').focus(); return; }
   if (!date)  { document.getElementById('inputDate').focus(); return; }
 
-  const entry = { id: nextId++, type, date, time, title, body, quote, quoteSrc: src, chips: [] };
+  const entry = { id: nextEntryId(), type, date, time, title, body, quote, quoteSrc: src, chips: [], image: '', imagePosition: 'center center', linkUrl: '', linkLabel: '' };
   entries.push(entry);
 
   closePanel();
